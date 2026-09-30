@@ -1,0 +1,784 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="ScaffoldM3C: A Multimodal Sequential Monte Carlo Framework for Generative Stable Construction Planning"
+    />
+    <meta property="og:title" content="ScaffoldM3C — Generative Stable Construction Planning" />
+    <meta
+      property="og:description"
+      content="A lightweight 225M-parameter Vision-Language-Construction model that plans stable, scaffold-aware block assemblies from text and image prompts."
+    />
+    <meta property="og:image" content="figures/fig1_overview.png" />
+    <title>ScaffoldM3C — Stable Construction Planning</title>
+    <link rel="icon" href="figures/title_mark.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="main.js" defer></script>
+  </head>
+  <body>
+    <nav class="topnav" aria-label="Sections">
+      <a class="topnav__brand" href="#top">
+        <img src="figures/title_mark.png" alt="" />
+        <span>ScaffoldM3C</span>
+      </a>
+      <div class="topnav__links">
+        <a href="#overview">Overview</a>
+        <a href="#stability">Stability</a>
+        <a href="#method">Method</a>
+        <a href="#results">Results</a>
+        <a href="#hardware">Hardware</a>
+        <a href="#ablations">Ablations</a>
+        <a href="#team">Team</a>
+        <a href="#resources">Resources</a>
+      </div>
+    </nav>
+
+    <main id="top">
+      <!-- ============================== HERO ============================== -->
+      <section class="hero" aria-labelledby="paper-title">
+        <video
+          class="hero__video"
+          autoplay
+          muted
+          loop
+          playsinline
+          preload="auto"
+          poster="videos/hero_poster.jpg"
+          aria-hidden="true"
+        >
+          <source src="videos/hero.mp4" type="video/mp4" />
+        </video>
+        <div class="hero__scrim" aria-hidden="true"></div>
+
+        <div class="hero__content">
+          <div class="logos" aria-label="Participating institutions and laboratories">
+            <div class="logo-pair">
+              <span class="logo-chip"><img src="logos/stanford_logo.png" alt="Stanford University" /></span>
+              <span class="logo-chip"><img src="logos/msl_logo.png" alt="Multi-robot Systems Lab (MSL)" /></span>
+            </div>
+            <div class="logo-pair">
+              <span class="logo-chip logo-chip--nus"><img src="logos/nus_logo.png" alt="National University of Singapore" /></span>
+              <span class="logo-chip"><img src="logos/marmot_logo.png" alt="Multi-Agent Robotic Motion Lab (MARMot)" /></span>
+            </div>
+            <div class="logo-pair">
+              <span class="logo-chip logo-chip--square"><img src="logos/zaragoza.png" alt="Universidad de Zaragoza" /></span>
+              <span class="logo-chip"><img src="logos/poc_logo.png" alt="Perception-Oriented Control Team (POC), Universidad de Zaragoza" /></span>
+            </div>
+          </div>
+
+          <header class="paper-heading">
+            <img class="paper-heading__mark" src="figures/title_mark.png" alt="" />
+            <h1 id="paper-title">
+              <span class="paper-heading__name">Scaffold<span>M3C</span></span>
+              <span class="paper-heading__subtitle"
+                >A Multimodal Sequential Monte Carlo Framework for Generative Stable Construction Planning</span
+              >
+            </h1>
+          </header>
+
+          <div class="authors" aria-label="Paper authors and affiliations">
+            <p class="authors__names">
+              <span>Gadiel Sznaier Camps<sup>1</sup></span><span>Chengyang He<sup>2</sup></span><span>Guillaume Sartoretti<sup>2</sup></span><span>Eduardo Montijano<sup>3</sup></span><span>Mac Schwager<sup>1</sup></span>
+            </p>
+            <div class="authors__affiliations">
+              <p><sup>1</sup> Multi-robot Systems Lab (MSL), Stanford University</p>
+              <p><sup>2</sup> Multi-Agent Robotic Motion Lab (MARMot), National University of Singapore</p>
+              <p><sup>3</sup> Perception-Oriented Control Team (POC), Universidad de Zaragoza</p>
+            </div>
+          </div>
+
+          <div class="hero__actions">
+            <!-- TODO: replace with the arXiv abstract URL once available -->
+            <span class="btn btn--ghost is-disabled" aria-disabled="true">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z" /><path d="M8 9h8M8 12h8M8 15h5" /></svg>
+              arXiv <small>soon</small>
+            </span>
+            <!-- TODO: replace with the GitHub repository URL once public -->
+            <span class="btn btn--ghost is-disabled" aria-disabled="true">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.4a9.8 9.8 0 0 0-3.1 19.1c.5.1.7-.2.7-.5v-1.9c-2.9.6-3.5-1.2-3.5-1.2-.5-1.2-1.2-1.5-1.2-1.5-.9-.7.1-.7.1-.7 1.1.1 1.7 1.1 1.7 1.1.9 1.7 2.5 1.2 3 .9.1-.7.4-1.2.7-1.5-2.3-.3-4.8-1.2-4.8-4.9 0-1.1.4-2 1.1-2.7-.1-.3-.5-1.3.1-2.7 0 0 .9-.3 2.8 1.1a9.7 9.7 0 0 1 5.1 0c1.9-1.3 2.8-1.1 2.8-1.1.6 1.4.2 2.4.1 2.7.7.7 1.1 1.6 1.1 2.7 0 3.8-2.4 4.6-4.7 4.9.4.3.7 1 .7 1.9V21c0 .3.2.6.7.5A9.8 9.8 0 0 0 12 2.4Z" /></svg>
+              Code <small>soon</small>
+            </span>
+            <a class="btn btn--ghost" href="#hardware">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="m10 8.5 5.5 3.5-5.5 3.5z" /></svg>
+              Robot builds
+            </a>
+          </div>
+        </div>
+
+        <dl class="hero__stats">
+          <div><dt>225M</dt><dd>parameters, 4× smaller than BrickGPT</dd></div>
+          <div><dt>5–20×</dt><dd>faster inference</dd></div>
+          <div><dt>100%</dt><dd>collision-free build plans</dd></div>
+          <div><dt>2.3×</dt><dd>overall stability vs. BrickGPT-Scaffold</dd></div>
+        </dl>
+      </section>
+
+      <!-- ============================ OVERVIEW ============================ -->
+      <section id="overview" class="section section--paper" aria-labelledby="overview-title">
+        <div class="section__inner">
+          <header class="section__header">
+            <span class="section__number" aria-hidden="true">01</span>
+            <h2 id="overview-title">Overview</h2>
+          </header>
+
+          <figure class="figure figure--framed">
+            <button class="zoomable" type="button" data-zoom="figures/fig1_overview.png" aria-label="Enlarge overview figure">
+              <img
+                src="figures/fig1_overview.png"
+                alt="ScaffoldM3C overview: multimodal conditioning (text, image, image plus text) and the build sequence history feed the ScaffoldM3C model, whose candidate blocks drive a probabilistic Sequential Monte Carlo search over assembly sequences; bottom row shows car, boat and bookshelf prompts with simulated and real-world builds"
+                width="2256"
+                height="1178"
+              />
+            </button>
+            <figcaption>
+              Given a starting build location, ScaffoldM3C auto-regressively proposes a set of next-block candidates, while a Sequential
+              Monte Carlo search keeps several assembly sequences alive at once, populated by the candidate likelihoods.
+            </figcaption>
+          </figure>
+
+          <div class="overview__grid">
+            <div class="prose">
+              <h3>Abstract</h3>
+              <p>
+                Autonomously constructing physically realizable 3D structures remains a significant challenge due to combinatorial
+                action spaces, interchangeable components, equifinal assembly sequences, and strict stability requirements during
+                construction. State-of-the-art methods fine-tune large language models for text-based generative construction.
+                However, these approaches do not allow for multimodal (text, image, sketch) conditioning, overlook the practical role of
+                scaffolding for stabilizing intermediate structures, and suffer from slow inference speeds.
+              </p>
+              <p>
+                We formulate construction as a probabilistic next-block generation task with multiple potential assembly actions and
+                multiple potential task-conditioning modalities, and explicitly consider the utility of scaffolding by introducing an
+                auxiliary scaffold block token. <strong>ScaffoldM3C</strong> (Scaffold Multimodal Monte Carlo) is a multimodal,
+                lightweight, auto-regressive model for stable block-based construction that proposes a set of next-step candidate
+                blocks. Leveraging these candidates, Sequential Monte Carlo maintains a population of possible assembly sequences,
+                considering multiple, potentially different, assembly directions simultaneously.
+              </p>
+              <p>
+                We train on an extension of the StableText2Brick dataset with image conditioning prompts and scaffold-stabilized build
+                sequences. ScaffoldM3C is 4× smaller than competing baselines, yielding a 5× to 20× inference speedup while achieving
+                comparable construction quality and higher overall stability, and we demonstrate it through simulation and real-world
+                robot assembly.
+              </p>
+            </div>
+
+            <ul class="contrib" aria-label="Main contributions">
+              <li>
+                <span class="contrib__icon contrib__icon--amber" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M4 18h4M10 18h4M16 18h4M6 14h4M12 14h4M8 10h4M3 6c3 0 3 4 6 4s3-4 6-4 3 4 6 4" /></svg>
+                </span>
+                <div>
+                  <h3>Multi-hypothesis assembly</h3>
+                  <p>Candidate block proposals with placement likelihoods let SMC keep diverse, feasible build sequences alive instead of committing to one greedy rollout.</p>
+                </div>
+              </li>
+              <li>
+                <span class="contrib__icon contrib__icon--steel" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M6 4v16M18 4v16M6 8h12M6 14h12M6 8l12 6M18 8 6 14" /></svg>
+                </span>
+                <div>
+                  <h3>Scaffold tokens</h3>
+                  <p>An auxiliary scaffold block (1×1 cross-section, adjustable height) resolves intermediate instability, such as overhangs, during generation.</p>
+                </div>
+              </li>
+              <li>
+                <span class="contrib__icon contrib__icon--blue" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><rect x="3" y="4" width="8" height="7" rx="1.5" /><path d="M5 9.5 7 7.5l2 2" /><path d="M14 6h7M14 9h5M3 15h7M3 18h5" /><rect x="13" y="13" width="8" height="7" rx="1.5" /></svg>
+                </span>
+                <div>
+                  <h3>Lightweight multimodal VLC</h3>
+                  <p>A dual-stream Vision-Language-Construction transformer with interwoven cross-attention, trained from scratch on 553K text-, image- and multimodal-conditioned sequences.</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================ STABILITY =========================== -->
+      <section id="stability" class="section section--white" aria-labelledby="stability-title">
+        <div class="section__inner">
+          <header class="section__header">
+            <span class="section__number" aria-hidden="true">02</span>
+            <h2 id="stability-title">Stability Criterion</h2>
+            <p class="section__lede">
+              A block is stable if it rests on the ground, or if the vertical projection <var>p</var> of its centroid
+              <var>c</var> lies inside the 2D convex hull <var>𝓗</var> of the contact faces of the blocks directly beneath it.
+              Scaffold blocks restore missing support so otherwise-unstable placements become feasible.
+            </p>
+          </header>
+
+          <div class="stability-grid">
+            <figure class="clip-card" data-clip>
+              <div class="clip-card__media">
+                <video muted loop playsinline preload="metadata" poster="media/stability/stability_a_ground.png" data-autoplay>
+                  <source src="media/stability/stability_a_ground.mp4" type="video/mp4" />
+                </video>
+                <button class="clip-card__replay" type="button" aria-label="Replay ground-supported animation">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4" /></svg>
+                </button>
+              </div>
+              <figcaption>
+                <span class="verdict verdict--good">Stable</span>
+                <strong>Ground-supported</strong>
+                <span>A block resting on the ground is stable by direct ground contact.</span>
+              </figcaption>
+            </figure>
+
+            <figure class="clip-card" data-clip>
+              <div class="clip-card__media">
+                <video muted loop playsinline preload="metadata" poster="media/stability/stability_b_unstable.png" data-autoplay>
+                  <source src="media/stability/stability_b_unstable.mp4" type="video/mp4" />
+                </video>
+                <button class="clip-card__replay" type="button" aria-label="Replay unstable animation">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4" /></svg>
+                </button>
+              </div>
+              <figcaption>
+                <span class="verdict verdict--bad">Unstable</span>
+                <strong>Single support</strong>
+                <span>With one support, <var>p</var> falls outside <var>𝓗</var> and the block would tip over.</span>
+              </figcaption>
+            </figure>
+
+            <figure class="clip-card" data-clip>
+              <div class="clip-card__media">
+                <video muted loop playsinline preload="metadata" poster="media/stability/stability_c_stable.png" data-autoplay>
+                  <source src="media/stability/stability_c_stable.mp4" type="video/mp4" />
+                </video>
+                <button class="clip-card__replay" type="button" aria-label="Replay stable animation">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4" /></svg>
+                </button>
+              </div>
+              <figcaption>
+                <span class="verdict verdict--good">Stable</span>
+                <strong>Supports at both ends</strong>
+                <span><var>𝓗</var> spans the gap between both contact faces, so <var>p</var> ∈ <var>𝓗</var>.</span>
+              </figcaption>
+            </figure>
+
+            <figure class="clip-card" data-clip>
+              <div class="clip-card__media">
+                <video muted loop playsinline preload="metadata" poster="media/stability/stability_d_scaffold.png" data-autoplay>
+                  <source src="media/stability/stability_d_scaffold.mp4" type="video/mp4" />
+                </video>
+                <button class="clip-card__replay" type="button" aria-label="Replay scaffold-assisted animation">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4" /></svg>
+                </button>
+              </div>
+              <figcaption>
+                <span class="verdict verdict--good">Stable</span>
+                <strong>Scaffold-assisted</strong>
+                <span>An auxiliary scaffold block (gray) restores the missing support and enlarges <var>𝓗</var>.</span>
+              </figcaption>
+            </figure>
+          </div>
+
+          <ul class="legend" aria-label="Legend">
+            <li><span class="swatch swatch--target"></span>target block</li>
+            <li><span class="swatch swatch--support"></span>support block</li>
+            <li><span class="swatch swatch--scaffold"></span>scaffold block</li>
+            <li><span class="swatch swatch--contact"></span>contact face</li>
+            <li><span class="swatch swatch--hull"></span>support region <var>𝓗</var></li>
+            <li><span class="dot"></span>centroid <var>c</var></li>
+            <li><span class="cross">×</span>projection <var>p</var></li>
+          </ul>
+
+          <ol class="rules">
+            <li><strong>Grounded start.</strong> The first block <var>b</var><sub>1</sub> must contact the ground.</li>
+            <li><strong>No overlap.</strong> A newly placed block may not intersect existing ones.</li>
+            <li><strong>Stable on placement.</strong> Every block satisfies the criterion above the moment it is placed.</li>
+          </ol>
+          <p class="note">
+            Combined four-panel clip:
+            <a href="media/stability/stability_all.mp4">MP4</a> ·
+            <a href="media/stability/stability_all.gif">GIF</a>
+          </p>
+        </div>
+      </section>
+
+      <!-- ============================== METHOD ============================ -->
+      <section id="method" class="section section--paper" aria-labelledby="method-title">
+        <div class="section__inner">
+          <header class="section__header">
+            <span class="section__number" aria-hidden="true">03</span>
+            <h2 id="method-title">Method</h2>
+            <p class="section__lede">
+              ScaffoldM3C maps a partial build sequence and a text and/or image prompt to a set of candidate next blocks
+              (position, shape class, likelihood). Sequential Monte Carlo turns those candidates into full, feasible build plans.
+            </p>
+          </header>
+
+          <h3 class="subhead">Sequential Monte Carlo inference</h3>
+          <ol class="smc">
+            <li>
+              <span class="smc__step">1</span>
+              <h4>Predict</h4>
+              <p>Each of <var>N</var> particles queries the model for its own sequence-conditioned candidate set <var>C</var><sub>t,i</sub>.</p>
+            </li>
+            <li>
+              <span class="smc__step">2</span>
+              <h4>Measure &amp; repair</h4>
+              <p>Collisions are repaired with a 2D minimum translation vector <var>v</var>; candidates are penalized by exp(−‖<var>v</var>‖).</p>
+            </li>
+            <li>
+              <span class="smc__step">3</span>
+              <h4>Reweight &amp; resample</h4>
+              <p>Scores are normalized per particle, a block is sampled, and surviving particles are importance-resampled.</p>
+            </li>
+            <li>
+              <span class="smc__step">4</span>
+              <h4>Select</h4>
+              <p>Sequences ending in EOS are harvested; the longest, highest-weight completed plan is returned.</p>
+            </li>
+          </ol>
+
+          <figure class="figure figure--framed">
+            <button class="zoomable" type="button" data-zoom="figures/fig3_architecture.jpg" aria-label="Enlarge architecture figure">
+              <img
+                src="figures/fig3_architecture.jpg"
+                alt="ScaffoldM3C architecture: model input of partial build sequence and conditioning prompt, interwoven causal and cross-attention layers, a windowed attention layer, and cascading position, class and likelihood heads followed by Top-K or SMC sampling"
+                width="2600"
+                height="714"
+                loading="lazy"
+              />
+            </button>
+            <figcaption>
+              <strong>Architecture.</strong> Block positions are lifted with Fourier features and concatenated with class embeddings;
+              prompts are encoded by a 4-bit quantized Gemma 3. Interwoven causal and cross-attention layers feed a windowed attention
+              layer and three cascaded heads that predict candidate positions, classes and likelihoods.
+            </figcaption>
+          </figure>
+
+          <div class="split">
+            <figure class="figure figure--framed split__figure">
+              <button class="zoomable" type="button" data-zoom="figures/fig4_data_generation.jpg" aria-label="Enlarge data generation figure">
+                <img
+                  src="figures/fig4_data_generation.jpg"
+                  alt="Data generation pipeline: StableText2Brick captions and build plans go through stability conversion (replay, check stability, insert scaffolds) and image generation (simulation render or Qwen text-to-image) producing realistic, abstract and synthetic image conditions"
+                  width="1300"
+                  height="1571"
+                  loading="lazy"
+                />
+              </button>
+            </figure>
+            <div class="prose split__copy">
+              <h3>A multimodal, stability-aware dataset</h3>
+              <p>
+                We build on StableText2Brick. Each original sequence is replayed block by block; whenever a placement violates our
+                stability criterion, the minimum number of scaffold blocks needed to support it is inserted. Structure geometry and
+                target-block order are preserved, so every intermediate assembly is stable.
+              </p>
+              <p>Each structure then receives three kinds of visual condition:</p>
+              <ul>
+                <li><strong>Synthetic</strong>: the build is simulated and rendered from a sampled viewpoint.</li>
+                <li><strong>Realistic</strong>: the object in a natural scene, from a Qwen text-to-image model.</li>
+                <li><strong>Abstract</strong>: a simplified artistic interpretation from the same model.</li>
+              </ul>
+              <p>
+                Every sequence expands into <strong>13 condition–sequence pairs</strong> (5 text-only, 3 image-only, 5 multimodal), for
+                <strong>553K</strong> conditioned assembly sequences in total.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================== RESULTS =========================== -->
+      <section id="results" class="section section--white" aria-labelledby="results-title">
+        <div class="section__inner">
+          <header class="section__header">
+            <span class="section__number" aria-hidden="true">04</span>
+            <h2 id="results-title">Results</h2>
+            <p class="section__lede">
+              Evaluated without rollbacks on 479 text and 288 image test prompts against BrickGPT, a 1B-parameter LLaMA-3.2 model
+              fine-tuned for brick assembly, and a scaffold-aware variant we fine-tuned (BrickGPT-Scaffold).
+            </p>
+          </header>
+
+          <div class="stat-row">
+            <div class="stat">
+              <span class="stat__value">26.7<small>%</small></span>
+              <span class="stat__label">fully stable &amp; feasible structures (text prompts, SMC) vs. 11.3% for BrickGPT-Scaffold</span>
+            </div>
+            <div class="stat">
+              <span class="stat__value">100<small>%</small></span>
+              <span class="stat__label">collision-free rate, up from 90.2% for BrickGPT-Scaffold</span>
+            </div>
+            <div class="stat">
+              <span class="stat__value">1.8<small>s</small></span>
+              <span class="stat__label">mean SMC inference time vs. 11.5–64.5 s for BrickGPT variants</span>
+            </div>
+            <div class="stat">
+              <span class="stat__value">0.84</span>
+              <span class="stat__label">DINOv2 similarity to ground truth, the highest among all methods</span>
+            </div>
+          </div>
+
+          <div class="table-wrap" role="region" aria-label="Quantitative results table" tabindex="0">
+            <table class="results-table">
+              <caption>
+                Average results without rollbacks. ↑ higher is better, ↓ lower is better, ≈ closer to ground truth is better.
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Method</th>
+                  <th scope="col">s<sub>overall</sub> ↑</th>
+                  <th scope="col">e<sub>feasible</sub> ↑</th>
+                  <th scope="col">e<sub>rate</sub> ↑</th>
+                  <th scope="col">s<sub>final</sub> ↑</th>
+                  <th scope="col">a<sub>gt</sub> ↑</th>
+                  <th scope="col">blocks ≈</th>
+                  <th scope="col">scaffolds ≈</th>
+                  <th scope="col">time (s) ↓</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="group"><th colspan="9" scope="colgroup">Text prompts</th></tr>
+                <tr class="muted"><th scope="row">Ground truth</th><td>100.00%</td><td>100.00%</td><td>100.00%</td><td>1.00</td><td>1.00</td><td>111.0</td><td>28.0</td><td>—</td></tr>
+                <tr><th scope="row">BrickGPT w/o rej.</th><td>2.73%</td><td>2.31%</td><td>28.09%</td><td>0.76</td><td>0.82</td><td>106.2</td><td>0.0</td><td>11.46</td></tr>
+                <tr><th scope="row">BrickGPT w/ rej.</th><td>3.13%</td><td>3.13%</td><td>100.00%</td><td>0.76</td><td>0.82</td><td class="best">110.9</td><td>0.0</td><td>13.86</td></tr>
+                <tr><th scope="row">BrickGPT-Scaffold</th><td>11.48%</td><td>11.27%</td><td>90.19%</td><td class="best">0.92</td><td>0.83</td><td>195.1</td><td>42.4</td><td>64.51</td></tr>
+                <tr class="ours"><th scope="row">Ours (Top-K)</th><td>20.04%</td><td>20.04%</td><td class="best">100.00%</td><td>0.82</td><td>0.81</td><td>89.6</td><td>21.3</td><td class="best">0.58</td></tr>
+                <tr class="ours"><th scope="row">Ours (SMC)</th><td class="best">26.72%</td><td class="best">26.72%</td><td class="best">100.00%</td><td>0.84</td><td class="best">0.84</td><td>126.9</td><td class="best">29.2</td><td>1.79</td></tr>
+                <tr class="group"><th colspan="9" scope="colgroup">Image prompts <span>(BrickGPT variants cannot take image input)</span></th></tr>
+                <tr class="muted"><th scope="row">Ground truth</th><td>100.00%</td><td>100.00%</td><td>100.00%</td><td>1.00</td><td>1.00</td><td>110.9</td><td>28.7</td><td>—</td></tr>
+                <tr class="ours"><th scope="row">Ours (Top-K)</th><td>18.40%</td><td>18.40%</td><td class="best">100.00%</td><td>0.81</td><td>0.82</td><td class="best">95.0</td><td>23.5</td><td class="best">0.62</td></tr>
+                <tr class="ours"><th scope="row">Ours (SMC)</th><td class="best">20.49%</td><td class="best">20.49%</td><td class="best">100.00%</td><td class="best">0.83</td><td class="best">0.84</td><td>128.2</td><td class="best">30.2</td><td>2.13</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="note">
+            BrickGPT-Scaffold's higher per-block s<sub>final</sub> comes from over-generating inherently stable scaffold tokens
+            (about 1.45× more than ours); it rarely yields a fully stable structure.
+          </p>
+
+          <figure class="figure figure--framed figure--scroll">
+            <div class="figure__scroll">
+              <button class="zoomable" type="button" data-zoom="figures/fig5_main_results.jpg" aria-label="Enlarge qualitative results">
+                <img
+                  src="figures/fig5_main_results.jpg"
+                  alt="Qualitative comparison grid: text prompts (sofa, chair, bookshelf, table, bottle, car, bus, train, vessel) and image prompts, with rows for ground truth, ours (SMC), ours (Top-K), BrickGPT without rejection sampling, and BrickGPT-Scaffold; BrickGPT rows are not applicable for image prompts"
+                  width="2600"
+                  height="1050"
+                  loading="lazy"
+                />
+              </button>
+            </div>
+            <figcaption>
+              <strong>Qualitative results</strong> on text and image prompts from the test set. SMC produces structures visually
+              comparable to BrickGPT with fewer artifacts than Top-K, and distributes scaffolds where they are needed.
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- ============================= HARDWARE =========================== -->
+      <section id="hardware" class="section section--dark" aria-labelledby="hardware-title">
+        <div class="section__inner">
+          <header class="section__header">
+            <span class="section__number" aria-hidden="true">05</span>
+            <h2 id="hardware-title">Robot Hardware Experiments</h2>
+            <p class="section__lede">
+              Generated plans are built autonomously by a 6-DOF robotic arm from 3D-printed, LEGO-style blocks. Each scaffold token is
+              physically instantiated as a stack of singleton scaffold blocks, which hold up overhangs such as the prow of the boat,
+              the bumpers of the car and the shelves of the bookshelf.
+            </p>
+          </header>
+
+          <div class="builds" data-tabs>
+            <div class="builds__tabs" role="tablist" aria-label="Choose a structure">
+              <button role="tab" id="tab-car" aria-controls="panel-car" aria-selected="true">Car <span>86 blocks</span></button>
+              <button role="tab" id="tab-boat" aria-controls="panel-boat" aria-selected="false" tabindex="-1">Boat <span>45 blocks</span></button>
+              <button role="tab" id="tab-bookshelf" aria-controls="panel-bookshelf" aria-selected="false" tabindex="-1">Bookshelf <span>89 blocks</span></button>
+            </div>
+
+            <div class="build" role="tabpanel" id="panel-car" aria-labelledby="tab-car">
+              <div class="build__row">
+                <div class="build__video build__video--wide">
+                  <video controls muted playsinline preload="none" poster="videos/car_hardware_poster.jpg" data-autoplay>
+                    <source src="videos/car_hardware.mp4" type="video/mp4" />
+                  </video>
+                  <span class="tag">Real world · 32× speed · wrist + side camera</span>
+                </div>
+                <div class="build__video build__video--square">
+                  <video muted loop playsinline preload="none" poster="videos/car_simulated_poster.jpg" data-autoplay>
+                    <source src="videos/car_simulated.mp4" type="video/mp4" />
+                  </video>
+                  <span class="tag">Simulated plan</span>
+                </div>
+              </div>
+              <div class="build__meta">
+                <p class="build__prompt"><span>Prompt</span> Image only: a photo of a car (left)</p>
+                <img src="figures/car_views.png" alt="Car image prompt and four views of the predicted structure" width="1850" height="400" loading="lazy" />
+              </div>
+            </div>
+
+            <div class="build" role="tabpanel" id="panel-boat" aria-labelledby="tab-boat" hidden>
+              <div class="build__row">
+                <div class="build__video build__video--wide">
+                  <video controls muted playsinline preload="none" poster="videos/boat_hardware_poster.jpg" data-autoplay>
+                    <source src="videos/boat_hardware.mp4" type="video/mp4" />
+                  </video>
+                  <span class="tag">Real world · 32× speed · wrist + side camera</span>
+                </div>
+                <div class="build__video build__video--square">
+                  <video muted loop playsinline preload="none" poster="videos/boat_simulated_poster.jpg" data-autoplay>
+                    <source src="videos/boat_simulated.mp4" type="video/mp4" />
+                  </video>
+                  <span class="tag">Simulated plan</span>
+                </div>
+              </div>
+              <div class="build__meta">
+                <p class="build__prompt"><span>Prompt</span> “Tiered vessel with angular extensions and layered design.”</p>
+                <img src="figures/boat_views.png" alt="Boat text prompt and four views of the predicted structure" width="1850" height="400" loading="lazy" />
+              </div>
+            </div>
+
+            <div class="build" role="tabpanel" id="panel-bookshelf" aria-labelledby="tab-bookshelf" hidden>
+              <div class="build__row">
+                <div class="build__video build__video--wide">
+                  <video controls muted playsinline preload="none" poster="videos/bookshelf_hardware_poster.jpg" data-autoplay>
+                    <source src="videos/bookshelf_hardware.mp4" type="video/mp4" />
+                  </video>
+                  <span class="tag">Real world · 32× speed · wrist + side camera</span>
+                </div>
+                <div class="build__video build__video--square">
+                  <video muted loop playsinline preload="none" poster="videos/bookshelf_simulated_poster.jpg" data-autoplay>
+                    <source src="videos/bookshelf_simulated.mp4" type="video/mp4" />
+                  </video>
+                  <span class="tag">Simulated plan</span>
+                </div>
+              </div>
+              <div class="build__meta">
+                <p class="build__prompt">
+                  <span>Prompt</span> “A vertical storage unit with three recessed horizontal sections spaced uniformly. The sides are
+                  flat with a consistent surface.” + image
+                </p>
+                <img src="figures/bookshelf_views.png" alt="Bookshelf multimodal prompt and four views of the predicted structure" width="1850" height="400" loading="lazy" />
+              </div>
+            </div>
+          </div>
+
+          <figure class="figure figure--dark hardware-figure">
+            <button class="zoomable" type="button" data-zoom="figures/fig6_hardware.jpg" aria-label="Enlarge hardware figure">
+              <img
+                src="figures/fig6_hardware.jpg"
+                alt="Finished boat, car and bookshelf built by the robot, with yellow scaffold blocks under overhangs, and the nine block types: 2x6, 2x4, 2x2, 1x8, 1x6, 1x4, 1x2, 1x1 and scaffold"
+                width="1328"
+                height="1154"
+                loading="lazy"
+              />
+            </button>
+            <figcaption>
+              Finished builds and the nine block types used. Yellow scaffold blocks support overhangs that would otherwise be
+              unstable.
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- ============================= ABLATIONS ========================== -->
+      <section id="ablations" class="section section--paper" aria-labelledby="ablations-title">
+        <div class="section__inner">
+          <header class="section__header">
+            <span class="section__number" aria-hidden="true">06</span>
+            <h2 id="ablations-title">Ablations &amp; Analysis</h2>
+            <p class="section__lede">
+              SMC lets users trade inference time for structural quality through the particle population size and the candidate and
+              class temperatures.
+            </p>
+          </header>
+
+          <div class="split split--wide-left">
+            <figure class="figure figure--framed">
+              <button class="zoomable" type="button" data-zoom="figures/fig7_population.jpg" aria-label="Enlarge population size figure">
+                <img
+                  src="figures/fig7_population.jpg"
+                  alt="Generated structures for several target objects as the SMC population grows from 1 to 320 sequences, next to the ground truth"
+                  width="2600"
+                  height="1065"
+                  loading="lazy"
+                />
+              </button>
+              <figcaption>
+                <strong>Population size.</strong> Larger populations yield more complete, coherent structures, with diminishing
+                returns beyond 160 sequences.
+              </figcaption>
+            </figure>
+            <div class="table-wrap table-wrap--compact" role="region" aria-label="Population size ablation table" tabindex="0">
+              <table class="results-table results-table--compact">
+                <caption>SMC population size (24 test samples)</caption>
+                <thead>
+                  <tr><th scope="col">N</th><th scope="col">s<sub>overall</sub> ↑</th><th scope="col">s<sub>final</sub> ↑</th><th scope="col">time (s) ↓</th></tr>
+                </thead>
+                <tbody>
+                  <tr><th scope="row">1</th><td>20.83%</td><td>0.80</td><td class="best">0.42</td></tr>
+                  <tr><th scope="row">4</th><td>20.83%</td><td>0.81</td><td>0.56</td></tr>
+                  <tr><th scope="row">10</th><td>20.83%</td><td>0.85</td><td>0.89</td></tr>
+                  <tr class="ours"><th scope="row">20</th><td>25.00%</td><td>0.88</td><td>1.60</td></tr>
+                  <tr class="ours"><th scope="row">40</th><td>20.83%</td><td>0.88</td><td>2.64</td></tr>
+                  <tr><th scope="row">80</th><td class="best">33.33%</td><td>0.91</td><td>4.93</td></tr>
+                  <tr><th scope="row">160</th><td>29.17%</td><td class="best">0.93</td><td>11.09</td></tr>
+                  <tr><th scope="row">320</th><td class="best">33.33%</td><td>0.91</td><td>22.89</td></tr>
+                </tbody>
+              </table>
+              <p class="note">Highlighted rows: the best quality/time trade-off (N = 20–40).</p>
+            </div>
+          </div>
+
+          <div class="card-grid">
+            <figure class="figure figure--framed">
+              <button class="zoomable" type="button" data-zoom="figures/fig8_temperature.png" aria-label="Enlarge temperature heatmaps">
+                <img
+                  src="figures/fig8_temperature.png"
+                  alt="Heatmaps of intermediate stability, final stability, standard block count and scaffold block count over candidate and class temperatures from 0.25 to 4"
+                  width="799"
+                  height="729"
+                  loading="lazy"
+                />
+              </button>
+              <figcaption>
+                <strong>Candidate vs. class temperature.</strong> Stability is highly sensitive to the class temperature; raising the
+                candidate temperature broadens exploration and generally improves stability.
+              </figcaption>
+            </figure>
+            <figure class="figure figure--framed">
+              <button class="zoomable" type="button" data-zoom="figures/fig9_belief_state.jpg" aria-label="Enlarge SMC belief state figure">
+                <img
+                  src="figures/fig9_belief_state.jpg"
+                  alt="SMC belief state for four particles while generating a table: spatial layout of candidates and heatmaps of conditional and joint class-candidate likelihoods"
+                  width="1600"
+                  height="1956"
+                  loading="lazy"
+                />
+              </button>
+              <figcaption>
+                <strong>SMC belief state</strong> after 12 steps generating a table (4 particles). Each particle holds its own
+                candidate set, so alternative placements are explored simultaneously.
+              </figcaption>
+            </figure>
+            <figure class="figure figure--framed">
+              <button class="zoomable" type="button" data-zoom="figures/fig10_failure_modes.jpg" aria-label="Enlarge failure modes figure">
+                <img
+                  src="figures/fig10_failure_modes.jpg"
+                  alt="Examples of the four failure modes: positional errors leading to out-of-distribution states, prompt confusion, early termination, and block shifting"
+                  width="1400"
+                  height="1897"
+                  loading="lazy"
+                />
+              </button>
+              <figcaption>
+                <strong>Failure modes:</strong> block misalignment, early termination, prompt confusion, and missing blocks or
+                scaffolding, most often downstream of an initial misalignment.
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <!-- =============================== TEAM ============================= -->
+      <section id="team" class="section section--white" aria-labelledby="team-title">
+        <div class="section__inner">
+          <header class="section__header">
+            <span class="section__number" aria-hidden="true">07</span>
+            <h2 id="team-title">Team</h2>
+          </header>
+
+          <ul class="avatars" aria-label="Authors">
+            <li>
+              <a class="avatar" href="team.html#gadiel">
+                <img src="team/gadiel.jpg" alt="" loading="lazy" />
+                <strong>Gadiel Sznaier Camps<sup>1</sup></strong>
+                <span>Stanford</span>
+              </a>
+            </li>
+            <li>
+              <a class="avatar" href="team.html#chengyang">
+                <img src="team/chengyang.jpg" alt="" loading="lazy" />
+                <strong>Chengyang He<sup>2</sup></strong>
+                <span>NUS</span>
+              </a>
+            </li>
+            <li>
+              <a class="avatar" href="team.html#guillaume">
+                <img src="team/guillaume.jpg" alt="" loading="lazy" />
+                <strong>Guillaume Sartoretti<sup>2</sup></strong>
+                <span>NUS</span>
+              </a>
+            </li>
+            <li>
+              <a class="avatar" href="team.html#eduardo">
+                <img src="team/eduardo.jpg" alt="" loading="lazy" />
+                <strong>Eduardo Montijano<sup>3</sup></strong>
+                <span>Zaragoza</span>
+              </a>
+            </li>
+            <li>
+              <a class="avatar" href="team.html#mac">
+                <img src="team/mac.jpg" alt="" loading="lazy" />
+                <strong>Mac Schwager<sup>1</sup></strong>
+                <span>Stanford</span>
+              </a>
+            </li>
+          </ul>
+          <p class="avatars__more"><a class="btn btn--outline" href="team.html">Meet the team <span aria-hidden="true">→</span></a></p>
+        </div>
+      </section>
+
+      <!-- ============================= RESOURCES ========================== -->
+      <section id="resources" class="section section--paper" aria-labelledby="resources-title">
+        <div class="section__inner">
+          <header class="section__header">
+            <span class="section__number" aria-hidden="true">08</span>
+            <h2 id="resources-title">Resources</h2>
+          </header>
+
+          <div class="resources">
+            <!-- TODO: turn into <a class="resource" href="https://arxiv.org/abs/..."> once the preprint is live -->
+            <div class="resource is-disabled" aria-disabled="true">
+              <span class="resource__eyebrow">Paper</span>
+              <strong>arXiv Preprint</strong>
+              <span>Full paper with appendix</span>
+              <span class="resource__cta">Coming soon</span>
+            </div>
+            <!-- TODO: link the repository when it is public -->
+            <div class="resource is-disabled" aria-disabled="true">
+              <span class="resource__eyebrow">Code</span>
+              <strong>GitHub Repository</strong>
+              <span>Open-source model, dataset tools and SMC inference</span>
+              <span class="resource__cta">Coming soon</span>
+            </div>
+          </div>
+
+          <div class="bibtex">
+            <div class="bibtex__head">
+              <h3>BibTeX</h3>
+              <span class="bibtex__status">Coming soon</span>
+            </div>
+            <p class="bibtex__soon">The citation entry will be posted here once the arXiv version is available.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>ScaffoldM3C · Stanford MSL · NUS MARMot · Zaragoza POC</p>
+      <a href="#top">Back to top ↑</a>
+    </footer>
+
+    <div class="lightbox" hidden>
+      <button class="lightbox__close" type="button" aria-label="Close enlarged image">×</button>
+      <img alt="" />
+    </div>
+  </body>
+</html>
